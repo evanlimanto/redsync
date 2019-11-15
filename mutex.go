@@ -65,6 +65,15 @@ func (m *Mutex) Lock() error {
 
 // Unlock unlocks m and returns the status of unlock.
 func (m *Mutex) Unlock() bool {
+	// Set the mutex value for clients who only want to release a lock without
+	// having acquired it.
+	value, err := m.genValueFunc()
+	if err != nil {
+		return false
+	}
+
+	m.value = value
+
 	n := m.actOnPoolsAsync(func(pool Pool) bool {
 		return m.release(pool, m.value)
 	})
